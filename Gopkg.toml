@@ -1,0 +1,57 @@
+# Gopkg.toml example
+#
+# Refer to https://golang.github.io/dep/docs/Gopkg.toml.html
+# for detailed Gopkg.toml documentation.
+#
+# required = ["github.com/user/thing/cmd/thing"]
+# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
+#
+# [[constraint]]
+#   name = "github.com/user/project"
+#   version = "1.0.0"
+#
+# [[constraint]]
+#   name = "github.com/user/project2"
+#   branch = "dev"
+#   source = "github.com/myfork/project2"
+#
+# [[override]]
+#   name = "github.com/x/y"
+#   version = "2.4.0"
+#
+# [prune]
+#   non-go = false
+#   go-tests = true
+#   unused-packages = true
+
+[[constraint]]
+  name = "github.com/coredns/coredns"
+  version = "~1.5.2"
+
+[[constraint]]
+  name = "github.com/mholt/caddy"
+  version = "1.0.1"
+
+[[constraint]]
+  name = "github.com/prometheus/client_golang"
+  version = "1.0.0"
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "~11.0.0"
+
+[[override]]
+  name = "k8s.io/api"
+  revision = "40a48860b5abbba9aa891b02b32da429b08d96a0"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  revision = "d7deff9243b165ee192f5551710ea4285dcfd615"
+
+[[override]]
+  name = "github.com/prometheus/client_model"
+  revision = "fd36f4220a901265f90734c3183c5f0c91daa0b8"
+
+[prune]
+  go-tests = true
+  unused-packages = true
