@@ -38,7 +38,7 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:78cc8ea31c1a13b80b954920d27377fc288a48c4e77fda591542503a1cd62216"
+  digest = "1:c586f9f0787bd72b77038affde240dc85798e5b71e42f9e7dd116716405ec47f"
   name = "github.com/coredns/coredns"
   packages = [
     "core/dnsserver",
@@ -59,6 +59,7 @@
     "plugin/health",
     "plugin/kubernetes",
     "plugin/kubernetes/object",
+    "plugin/loadbalance",
     "plugin/log",
     "plugin/loop",
     "plugin/metadata",
@@ -817,6 +818,7 @@
     "github.com/coredns/coredns/plugin/forward",
     "github.com/coredns/coredns/plugin/health",
     "github.com/coredns/coredns/plugin/kubernetes",
+    "github.com/coredns/coredns/plugin/loadbalance",
     "github.com/coredns/coredns/plugin/log",
     "github.com/coredns/coredns/plugin/loop",
     "github.com/coredns/coredns/plugin/metrics",

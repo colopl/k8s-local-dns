@@ -18,6 +18,7 @@ import (
 	_ "github.com/coredns/coredns/plugin/forward"
 	_ "github.com/coredns/coredns/plugin/health"
 	_ "github.com/coredns/coredns/plugin/kubernetes"
+	_ "github.com/coredns/coredns/plugin/loadbalance"
 	_ "github.com/coredns/coredns/plugin/log"
 	_ "github.com/coredns/coredns/plugin/loop"
 	_ "github.com/coredns/coredns/plugin/metrics"
@@ -85,8 +86,23 @@ func (c *cacheApp) Init() {
 }
 
 func init() {
+	clog.Infof("test test")
+
 	cache.Init()
-	caddy.OnProcessExit = append(caddy.OnProcessExit, func() { cache.teardownNetworking() })
+
+	caddy.RegisterPlugin("localdns", caddy.Plugin{
+		ServerType: "dns",
+		Action:     setup,
+	})
+}
+
+func setup(c *caddy.Controller) error {
+	c.OnShutdown(func() error {
+		cache.teardownNetworking()
+		return nil
+	})
+
+	return nil
 }
 
 func (c *cacheApp) initIptables() {
