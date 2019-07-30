@@ -19,17 +19,22 @@
 # Golang package.
 PKG := github.com/axot/k8s-local-dns
 
-# List of binaries to build that are containerized and pushed.
-# You must have a matching Dockerfile.BINARY for each BINARY.
-CONTAINER_BINARIES := k8s-local-dns
+# List of binaries to build. You must have a matching Dockerfile.BINARY
+# for each BINARY.
+CONTAINER_BINARIES ?= local-dns
 
-# Registry to push to.
-REGISTRY ?= staging-k8s.gcr.io
-# Default architecture to build for.
+# Latest commit hash for current branch.
+GIT_COMMIT := $(shell git rev-parse HEAD)
+
+# Push to the staging registry.
+REGISTRY ?= asia.gcr.io/k8s-common-224708/colopl
+
 ARCH ?= amd64
+ALL_ARCH := amd64
+
 # Image to use for building.
-BUILD_IMAGE ?= golang:1.11-alpine
-# Containers will be named: $(CONTAINER_PREFIX)-$(BINARY)-$(ARCH):$(VERSION)
+BUILD_IMAGE ?= golang:1.12-alpine
+# Containers will be named: $(CONTAINER_PREFIX)-$(BINARY)-$(ARCH):$(VERSION).
 CONTAINER_PREFIX ?= k8s-dns
 
 # This version-strategy uses git tags to set the version string
@@ -39,6 +44,4 @@ VERSION ?= $(shell git describe --tags --always --dirty)
 VERBOSE ?= 0
 
 # Include standard build rules.
-include rules.mk
-
-.$(BUILDSTAMP_NAME)-container: images-containers
+include build/rules.mk

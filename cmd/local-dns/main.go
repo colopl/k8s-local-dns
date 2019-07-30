@@ -170,7 +170,7 @@ func (c *cacheApp) teardownNetworking() error {
 func (c *cacheApp) parseAndValidateFlags() error {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "Runs coreDNS v1.2.5 as a nodelocal cache listening on the specified ip:port")
+		fmt.Fprintf(os.Stderr, "Runs coreDNS v1.5.2 as a nodelocal cache listening on the specified ip:port")
 		flag.PrintDefaults()
 	}
 

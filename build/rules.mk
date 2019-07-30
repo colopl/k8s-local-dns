@@ -18,7 +18,6 @@
 
 # Variables exported to submake
 export ARCH
-export MANIFEST_IMAGE
 export CONTAINER_PREFIX
 export IMAGES
 export REGISTRY
@@ -28,22 +27,34 @@ export VERSION
 # directories which hold app source (not vendored)
 SRC_DIRS := cmd pkg
 
-ALL_ARCH := amd64 arm arm64 ppc64le s390x
+# Variables exported to submake
+export ARCH
+export CONTAINER_PREFIX
+export IMAGES
+export REGISTRY
+export VERBOSE
+export VERSION
+
+# directories which hold app source (not vendored)
+SRC_DIRS := cmd pkg
+
+ALL_ARCH ?= amd64 arm arm64 ppc64le s390x
+NOBODY ?= nobody
 # Set default base image dynamically for each arch
 ifeq ($(ARCH),amd64)
-	BASEIMAGE?=k8s.gcr.io/debian-base:v1.0.0
+    BASEIMAGE?=alpine
 endif
 ifeq ($(ARCH),arm)
-	BASEIMAGE?=k8s.gcr.io/debian-base-arm:v1.0.0
+    BASEIMAGE?=arm32v6/alpine
 endif
 ifeq ($(ARCH),arm64)
-	BASEIMAGE?=k8s.gcr.io/debian-base-arm64:v1.0.0
+    BASEIMAGE?=arm64v8/alpine
 endif
 ifeq ($(ARCH),ppc64le)
-	BASEIMAGE?=k8s.gcr.io/debian-base-ppc64le:v1.0.0
+    BASEIMAGE?=ppc64le/alpine
 endif
 ifeq ($(ARCH),s390x)
-	BASEIMAGE?=k8s.gcr.io/debian-base-s390x:v1.0.0
+    BASEIMAGE?=s390x/alpine
 endif
 
 # These rules MUST be expanded at reference time (hence '=') as BINARY
@@ -51,9 +62,7 @@ endif
 CONTAINER_NAME  = $(REGISTRY)/$(CONTAINER_PREFIX)-$(BINARY)-$(ARCH)
 BUILDSTAMP_NAME = $(subst :,_,$(subst /,_,$(CONTAINER_NAME))_$(VERSION))
 
-# Ensure that the docker command line supports the manifest images
-export DOCKER_CLI_EXPERIMENTAL=enabled
-
+ALL_BINARIES += $(BINARIES)
 ALL_BINARIES += $(CONTAINER_BINARIES)
 
 GO_BINARIES := $(addprefix bin/$(ARCH)/,$(ALL_BINARIES))
@@ -65,7 +74,7 @@ ifeq ($(VERBOSE), 1)
 	VERBOSE_OUTPUT := >&1
 else
 	DOCKER_BUILD_FLAGS := -q
-	VERBOSE_OUTPUT := >/dev/null
+	VERBOSE_OUTPUT := >/dev/null 2>/dev/null
 endif
 
 # This MUST appear as the first rule in a Makefile
@@ -89,14 +98,6 @@ all-containers: $(addprefix containers-, $(ALL_ARCH))
 
 .PHONY: all-push
 all-push: $(addprefix push-, $(ALL_ARCH))
-	@for binary in $(CONTAINER_BINARIES); do \
-		MANIFEST_IMAGE=$(REGISTRY)/$(CONTAINER_PREFIX)-$${binary} ; \
-		for arch in $(ALL_ARCH); do \
-			docker manifest create --amend $$MANIFEST_IMAGE:$(VERSION) $$MANIFEST_IMAGE-$${arch}:${VERSION} ; \
-			docker manifest annotate --arch $${arch} $$MANIFEST_IMAGE:${VERSION} $$MANIFEST_IMAGE-$${arch}:${VERSION}; \
-		done ; \
-		docker manifest push --purge $$MANIFEST_IMAGE:${VERSION} ; \
-	done
 
 .PHONY: build
 build: $(GO_BINARIES) images-build
@@ -105,7 +106,7 @@ build: $(GO_BINARIES) images-build
 # Rule for all bin/$(ARCH)/bin/$(BINARY)
 $(GO_BINARIES): build-dirs
 	@echo "building : $@"
-	@docker pull $(BUILD_IMAGE)
+	@docker pull $(BUILD_IMAGE) $(VERBOSE_OUTPUT)
 	@docker run                                                            \
 	    --rm                                                               \
 	    --sig-proxy=true                                                   \
@@ -114,25 +115,28 @@ $(GO_BINARIES): build-dirs
 	    -v $$(pwd):/go/src/$(PKG)                                          \
 	    -v $$(pwd)/bin/$(ARCH):/go/bin/linux_$(ARCH)                       \
 	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
+	    -v $$(pwd)/.go/cache:/.cache/go-build                              \
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    /bin/sh -c "                                                       \
-	        ARCH=$(ARCH)                                                   \
+		ARCH=$(ARCH)                                                   \
 	        VERSION=$(VERSION)                                             \
 	        PKG=$(PKG)                                                     \
+		TARGET=$@                                                      \
+		GIT_COMMIT=$(GIT_COMMIT)                                       \
 	        ./build/build.sh                                               \
 	    "
-
 
 # Rules for dockerfiles.
 define DOCKERFILE_RULE
 .$(BINARY)-$(ARCH)-dockerfile: Dockerfile.$(BINARY)
-	@echo generating Dockerfile $$@ from $$<
+	@echo "generating Dockerfile $$@ from $$<"
 	@sed					\
 	    -e 's|ARG_ARCH|$(ARCH)|g' \
 	    -e 's|ARG_BIN|$(BINARY)|g' \
 	    -e 's|ARG_REGISTRY|$(REGISTRY)|g' \
 	    -e 's|ARG_FROM|$(BASEIMAGE)|g' \
+	    -e 's|ARG_NOBODY|$(NOBODY)|g' \
 	    -e 's|ARG_VERSION|$(VERSION)|g' \
 	    $$< > $$@
 .$(BUILDSTAMP_NAME)-container: .$(BINARY)-$(ARCH)-dockerfile
@@ -179,8 +183,8 @@ $(foreach BINARY,$(CONTAINER_BINARIES),$(eval $(PUSH_RULE)))
 
 
 # Rule for `test`
-.PHONY: test
-test: build-dirs images-test
+.PHONY: test images-test
+test: build-dirs
 	@docker run                                                            \
 	    --rm                                                               \
 	    --sig-proxy=true                                                   \
@@ -189,13 +193,22 @@ test: build-dirs images-test
 	    -v $$(pwd):/go/src/$(PKG)                                          \
 	    -v $$(pwd)/bin/$(ARCH):/go/bin                                     \
 	    -v $$(pwd)/.go/std/$(ARCH):/usr/local/go/pkg/linux_$(ARCH)_static  \
+	    -v $$(pwd)/.go/cache:/.cache/go-build                              \
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    /bin/sh -c "                                                       \
 	        ./build/test.sh $(SRC_DIRS)                                    \
 	    "
 
-# Hook in images build
+# Hook in images build if the directory exists.
+ifeq ($(wildcard images),)
+.PHONY: images-build images-containers images-push images-test images-clean
+images-build:
+images-containers:
+images-push:
+images-test:
+images-clean:
+else
 .PHONY: images-build
 images-build:
 	@$(MAKE) -C images build
@@ -215,16 +228,17 @@ images-test:
 .PHONY: images-clean
 images-clean:
 	@$(MAKE) -C images clean
+endif
 
 # Miscellaneous rules
 .PHONY: version
 version:
-	@echo $(VERSION)
+	@echo "$(VERSION)"
 
 .PHONY: build-dirs
 build-dirs:
 	@mkdir -p bin/$(ARCH)
-	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH)
+	@mkdir -p .go/src/$(PKG) .go/pkg .go/bin .go/std/$(ARCH) .go/cache
 
 .PHONY: clean
 clean: container-clean bin-clean images-clean
@@ -240,20 +254,20 @@ bin-clean:
 .PHONY: help
 help:
 	@echo "make targets"
-	@echo
+	@echo ""
 	@echo "  all, build    build all binaries"
 	@echo "  containers    build the containers"
 	@echo "  push          push containers to the registry"
 	@echo "  help          this help message"
 	@echo "  version       show package version"
-	@echo
+	@echo ""
 	@echo "  {build,containers,push}-ARCH    do action for specific ARCH"
 	@echo "  all-{build,containers,push}     do action for all ARCH"
 	@echo "  only-push-BINARY                push just BINARY"
-	@echo
+	@echo ""
 	@echo "  Available ARCH: $(ALL_ARCH)"
 	@echo "  Available BINARIES: $(ALL_BINARIES)"
-	@echo
+	@echo ""
 	@echo "  Setting VERBOSE=1 will show additional build logging."
-	@echo
+	@echo ""
 	@echo "  Setting VERSION will override the container version tag."
