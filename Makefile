@@ -17,7 +17,7 @@
 #
 
 # Golang package.
-PKG := github.com/axot/k8s-local-dns
+PKG := github.com/colopl/k8s-local-dns
 
 # List of binaries to build. You must have a matching Dockerfile.BINARY
 # for each BINARY.
