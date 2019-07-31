@@ -23,7 +23,6 @@ import (
 	_ "github.com/coredns/coredns/plugin/loop"
 	_ "github.com/coredns/coredns/plugin/metrics"
 	clog "github.com/coredns/coredns/plugin/pkg/log"
-	_ "github.com/coredns/coredns/plugin/ready"
 	_ "github.com/coredns/coredns/plugin/reload"
 	"github.com/mholt/caddy"
 	"k8s.io/kubernetes/pkg/util/dbus"
@@ -86,23 +85,8 @@ func (c *cacheApp) Init() {
 }
 
 func init() {
-	clog.Infof("test test")
-
 	cache.Init()
-
-	caddy.RegisterPlugin("localdns", caddy.Plugin{
-		ServerType: "dns",
-		Action:     setup,
-	})
-}
-
-func setup(c *caddy.Controller) error {
-	c.OnShutdown(func() error {
-		cache.teardownNetworking()
-		return nil
-	})
-
-	return nil
+	caddy.OnProcessExit = append(caddy.OnProcessExit, func() { cache.teardownNetworking() })
 }
 
 func (c *cacheApp) initIptables() {
@@ -186,7 +170,7 @@ func (c *cacheApp) teardownNetworking() error {
 func (c *cacheApp) parseAndValidateFlags() error {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "Runs coreDNS v1.5.2 as a nodelocal cache listening on the specified ip:port")
+		fmt.Fprintf(os.Stderr, "Runs coreDNS v1.2.6 as a nodelocal cache listening on the specified ip:port")
 		flag.PrintDefaults()
 	}
 

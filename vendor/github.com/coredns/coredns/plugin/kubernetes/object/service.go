@@ -7,7 +7,6 @@ import (
 
 // Service is a stripped down api.Service with only the items we need for CoreDNS.
 type Service struct {
-	// Don't add new fields to this struct without talking to the CoreDNS maintainers.
 	Version      string
 	Name         string
 	Namespace    string
@@ -16,9 +15,6 @@ type Service struct {
 	Type         api.ServiceType
 	ExternalName string
 	Ports        []api.ServicePort
-
-	// ExternalIPs we may want to export.
-	ExternalIPs []string
 
 	*Empty
 }
@@ -41,8 +37,6 @@ func ToService(obj interface{}) interface{} {
 		ClusterIP:    svc.Spec.ClusterIP,
 		Type:         svc.Spec.Type,
 		ExternalName: svc.Spec.ExternalName,
-
-		ExternalIPs: make([]string, len(svc.Status.LoadBalancer.Ingress)+len(svc.Spec.ExternalIPs)),
 	}
 
 	if len(svc.Spec.Ports) == 0 {
@@ -51,11 +45,6 @@ func ToService(obj interface{}) interface{} {
 	} else {
 		s.Ports = make([]api.ServicePort, len(svc.Spec.Ports))
 		copy(s.Ports, svc.Spec.Ports)
-	}
-
-	li := copy(s.ExternalIPs, svc.Spec.ExternalIPs)
-	for i, lb := range svc.Status.LoadBalancer.Ingress {
-		s.ExternalIPs[li+i] = lb.IP
 	}
 
 	*svc = api.Service{}
@@ -76,10 +65,8 @@ func (s *Service) DeepCopyObject() runtime.Object {
 		Type:         s.Type,
 		ExternalName: s.ExternalName,
 		Ports:        make([]api.ServicePort, len(s.Ports)),
-		ExternalIPs:  make([]string, len(s.ExternalIPs)),
 	}
 	copy(s1.Ports, s.Ports)
-	copy(s1.ExternalIPs, s.ExternalIPs)
 	return s1
 }
 

@@ -10,7 +10,7 @@ import (
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/pkg/dnsutil"
 
-	"github.com/caddyserver/caddy"
+	"github.com/mholt/caddy"
 )
 
 func init() {
@@ -41,7 +41,6 @@ func setup(c *caddy.Controller) error {
 			addr := net.JoinHostPort(lh, conf.Port)
 
 			for time.Now().Before(deadline) {
-				l.setAddress(addr)
 				if _, err := l.exchange(addr); err != nil {
 					l.reset()
 					time.Sleep(1 * time.Second)

@@ -13,7 +13,6 @@ access.log
 
 /*.conf
 Caddyfile
-!caddyfile/
 
 og_static/
 

@@ -44,6 +44,12 @@ const (
 	DnstapSendOption ContextKey = "dnstap-send-option"
 )
 
+// TapperFromContext will return a Tapper if the dnstap plugin is enabled.
+func TapperFromContext(ctx context.Context) (t Tapper) {
+	t, _ = ctx.(Tapper)
+	return
+}
+
 // TapMessage implements Tapper.
 func (h Dnstap) TapMessage(m *tap.Message) {
 	t := tap.Dnstap_MESSAGE
@@ -65,7 +71,6 @@ func (h Dnstap) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) 
 	// message to be sent out
 	sendOption := taprw.SendOption{Cq: true, Cr: true}
 	newCtx := context.WithValue(ctx, DnstapSendOption, &sendOption)
-	newCtx = ContextWithTapper(newCtx, h)
 
 	rw := &taprw.ResponseWriter{
 		ResponseWriter: w,
@@ -75,7 +80,7 @@ func (h Dnstap) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) 
 		QueryEpoch:     time.Now(),
 	}
 
-	code, err := plugin.NextOrFailure(h.Name(), h.Next, newCtx, rw, r)
+	code, err := plugin.NextOrFailure(h.Name(), h.Next, tapContext{newCtx, h}, rw, r)
 	if err != nil {
 		// ignore dnstap errors
 		return code, err

@@ -1,8 +1,8 @@
 .:53 {
-        bind 1.2.3.4
+        bind 127.0.0.1
         errors
         health
-        ready
+        #ready
         kubernetes cluster.local in-addr.arpa ip6.arpa {
             pods insecure
             upstream

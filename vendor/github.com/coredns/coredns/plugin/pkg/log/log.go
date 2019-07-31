@@ -13,36 +13,14 @@ import (
 	"io/ioutil"
 	golog "log"
 	"os"
-	"sync"
 	"time"
 )
 
-// D controls whether we should output debug logs. If true, we do, once set
-// it can not be unset.
-var D = &d{}
-
-type d struct {
-	on bool
-	sync.RWMutex
-}
-
-// Set sets d to true.
-func (d *d) Set() {
-	d.Lock()
-	d.on = true
-	d.Unlock()
-}
-
-// Value return the boolean value of d.
-func (d *d) Value() bool {
-	d.RLock()
-	b := d.on
-	d.RUnlock()
-	return b
-}
+// D controls whether we should output debug logs. If true, we do.
+var D bool
 
 // RFC3339Milli doesn't exist, invent it here.
-func clock() string { return time.Now().Format("2006-01-02T15:04:05.000Z07:00") }
+func clock() string { return time.Now().Format("2006-01-02T15:04:05.999Z07:00") }
 
 // logf calls log.Printf prefixed with level.
 func logf(level, format string, v ...interface{}) {
@@ -57,7 +35,7 @@ func log(level string, v ...interface{}) {
 // Debug is equivalent to log.Print(), but prefixed with "[DEBUG] ". It only outputs something
 // if D is true.
 func Debug(v ...interface{}) {
-	if !D.Value() {
+	if !D {
 		return
 	}
 	log(debug, v...)
@@ -66,7 +44,7 @@ func Debug(v ...interface{}) {
 // Debugf is equivalent to log.Printf(), but prefixed with "[DEBUG] ". It only outputs something
 // if D is true.
 func Debugf(format string, v ...interface{}) {
-	if !D.Value() {
+	if !D {
 		return
 	}
 	logf(debug, format, v...)

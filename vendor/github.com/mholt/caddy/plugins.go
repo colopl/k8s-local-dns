@@ -21,7 +21,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/caddyserver/caddy/caddyfile"
+	"github.com/mholt/caddy/caddyfile"
 )
 
 // These are all the registered plugins.
@@ -70,13 +70,6 @@ func DescribePlugins() string {
 		str += "\nEvent hook plugins:\n"
 		for _, name := range pl["event_hooks"] {
 			str += "  hook." + name + "\n"
-		}
-	}
-
-	if len(pl["clustering"]) > 0 {
-		str += "\nClustering plugins:\n"
-		for _, name := range pl["clustering"] {
-			str += "  " + name + "\n"
 		}
 	}
 
@@ -270,10 +263,9 @@ type EventName string
 // Define names for the various events
 const (
 	StartupEvent         EventName = "startup"
-	ShutdownEvent                  = "shutdown"
-	CertRenewEvent                 = "certrenew"
-	InstanceStartupEvent           = "instancestartup"
-	InstanceRestartEvent           = "instancerestart"
+	ShutdownEvent        EventName = "shutdown"
+	CertRenewEvent       EventName = "certrenew"
+	InstanceStartupEvent EventName = "instancestartup"
 )
 
 // EventHook is a type which holds information about a startup hook plugin.

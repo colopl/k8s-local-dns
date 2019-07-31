@@ -9,6 +9,7 @@ import (
 
 	"github.com/coredns/coredns/pb"
 	"github.com/coredns/coredns/plugin/pkg/transport"
+	"github.com/coredns/coredns/plugin/pkg/watch"
 
 	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/miekg/dns"
@@ -23,6 +24,7 @@ type ServergRPC struct {
 	grpcServer *grpc.Server
 	listenAddr net.Addr
 	tlsConfig  *tls.Config
+	watch      watch.Watcher
 }
 
 // NewServergRPC returns a new CoreDNS GRPC server and compiles all plugin in to it.
@@ -39,7 +41,7 @@ func NewServergRPC(addr string, group []*Config) (*ServergRPC, error) {
 		tlsConfig = conf.TLSConfig
 	}
 
-	return &ServergRPC{Server: s, tlsConfig: tlsConfig}, nil
+	return &ServergRPC{Server: s, tlsConfig: tlsConfig, watch: watch.NewWatcher(watchables(s.zones))}, nil
 }
 
 // Serve implements caddy.TCPServer interface.
@@ -101,6 +103,9 @@ func (s *ServergRPC) OnStartupComplete() {
 func (s *ServergRPC) Stop() (err error) {
 	s.m.Lock()
 	defer s.m.Unlock()
+	if s.watch != nil {
+		s.watch.Stop()
+	}
 	if s.grpcServer != nil {
 		s.grpcServer.GracefulStop()
 	}
@@ -129,8 +134,7 @@ func (s *ServergRPC) Query(ctx context.Context, in *pb.DnsPacket) (*pb.DnsPacket
 
 	w := &gRPCresponse{localAddr: s.listenAddr, remoteAddr: a, Msg: msg}
 
-	dnsCtx := context.WithValue(ctx, Key{}, s.Server)
-	s.ServeDNS(dnsCtx, w, msg)
+	s.ServeDNS(ctx, w, msg)
 
 	packed, err := w.Msg.Pack()
 	if err != nil {
@@ -138,6 +142,12 @@ func (s *ServergRPC) Query(ctx context.Context, in *pb.DnsPacket) (*pb.DnsPacket
 	}
 
 	return &pb.DnsPacket{Msg: packed}, nil
+}
+
+// Watch is the entrypoint called by the gRPC layer when the user asks
+// to watch a query.
+func (s *ServergRPC) Watch(stream pb.DnsService_WatchServer) error {
+	return s.watch.Watch(stream)
 }
 
 // Shutdown stops the server (non gracefully).
@@ -155,7 +165,7 @@ type gRPCresponse struct {
 }
 
 // Write is the hack that makes this work. It does not actually write the message
-// but returns the bytes we need to write in r. We can then pick this up in Query
+// but returns the bytes we need to to write in r. We can then pick this up in Query
 // and write a proper protobuf back to the client.
 func (r *gRPCresponse) Write(b []byte) (int, error) {
 	r.Msg = new(dns.Msg)

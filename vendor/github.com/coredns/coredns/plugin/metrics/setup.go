@@ -7,17 +7,15 @@ import (
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/coremain"
 	"github.com/coredns/coredns/plugin"
-	"github.com/coredns/coredns/plugin/metrics/vars"
 	clog "github.com/coredns/coredns/plugin/pkg/log"
 	"github.com/coredns/coredns/plugin/pkg/uniq"
 
-	"github.com/caddyserver/caddy"
+	"github.com/mholt/caddy"
 )
 
 var (
 	log      = clog.NewWithPlugin("prometheus")
-	u        = uniq.New()
-	registry = newReg()
+	uniqAddr = uniq.New()
 )
 
 func init() {
@@ -28,56 +26,41 @@ func init() {
 }
 
 func setup(c *caddy.Controller) error {
-	m, err := parse(c)
+	m, err := prometheusParse(c)
 	if err != nil {
 		return plugin.Error("prometheus", err)
 	}
-	m.Reg = registry.getOrSet(m.Addr, m.Reg)
 
-	c.OnStartup(func() error { m.Reg = registry.getOrSet(m.Addr, m.Reg); u.Set(m.Addr, m.OnStartup); return nil })
-	c.OnRestartFailed(func() error { m.Reg = registry.getOrSet(m.Addr, m.Reg); u.Set(m.Addr, m.OnStartup); return nil })
-
-	c.OnStartup(func() error { return u.ForEach() })
-	c.OnRestartFailed(func() error { return u.ForEach() })
-
-	c.OnStartup(func() error {
-		conf := dnsserver.GetConfig(c)
-		for _, h := range conf.ListenHosts {
-			addrstr := conf.Transport + "://" + net.JoinHostPort(h, conf.Port)
-			for _, p := range conf.Handlers() {
-				vars.PluginEnabled.WithLabelValues(addrstr, conf.Zone, p.Name()).Set(1)
-			}
-		}
-		return nil
-	})
-	c.OnRestartFailed(func() error {
-		conf := dnsserver.GetConfig(c)
-		for _, h := range conf.ListenHosts {
-			addrstr := conf.Transport + "://" + net.JoinHostPort(h, conf.Port)
-			for _, p := range conf.Handlers() {
-				vars.PluginEnabled.WithLabelValues(addrstr, conf.Zone, p.Name()).Set(1)
-			}
-		}
-		return nil
-	})
-
-	c.OnRestart(m.OnRestart)
-	c.OnRestart(func() error { vars.PluginEnabled.Reset(); return nil })
-	c.OnFinalShutdown(m.OnFinalShutdown)
-
-	// Initialize metrics.
-	buildInfo.WithLabelValues(coremain.CoreVersion, coremain.GitCommit, runtime.Version()).Set(1)
+	// register the metrics to its address (ensure only one active metrics per address)
+	obj := uniqAddr.Set(m.Addr, m.OnStartup, m)
+	//propagate the real active Registry to current metrics
+	if om, ok := obj.(*Metrics); ok {
+		m.Reg = om.Reg
+	}
 
 	dnsserver.GetConfig(c).AddPlugin(func(next plugin.Handler) plugin.Handler {
 		m.Next = next
 		return m
 	})
 
+	c.OncePerServerBlock(func() error {
+		c.OnStartup(func() error {
+			return uniqAddr.ForEach()
+		})
+		return nil
+	})
+
+	c.OnRestart(m.OnRestart)
+	c.OnFinalShutdown(m.OnFinalShutdown)
+
+	// Initialize metrics.
+	buildInfo.WithLabelValues(coremain.CoreVersion, coremain.GitCommit, runtime.Version()).Set(1)
+
 	return nil
 }
 
-func parse(c *caddy.Controller) (*Metrics, error) {
-	met := New(defaultAddr)
+func prometheusParse(c *caddy.Controller) (*Metrics, error) {
+	var met = New(defaultAddr)
 
 	i := 0
 	for c.Next() {

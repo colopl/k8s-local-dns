@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build !windows,!plan9,!nacl,!js
+// +build !windows,!plan9,!nacl
 
 package caddy
 
@@ -22,8 +22,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/caddyserver/caddy/telemetry"
-	"github.com/mholt/certmagic"
+	"github.com/mholt/caddy/telemetry"
 )
 
 // trapSignalsPosix captures POSIX-only signals.
@@ -39,7 +38,6 @@ func trapSignalsPosix() {
 				for _, f := range OnProcessExit {
 					f() // only perform important cleanup actions
 				}
-				certmagic.CleanUpOwnLocks()
 				os.Exit(0)
 
 			case syscall.SIGTERM:
@@ -57,7 +55,6 @@ func trapSignalsPosix() {
 				telemetry.AppendUnique("sigtrap", "SIGTERM")
 				go telemetry.StopEmitting() // won't finish in time, but that's OK - just don't block
 
-				certmagic.CleanUpOwnLocks()
 				os.Exit(exitCode)
 
 			case syscall.SIGUSR1:
@@ -93,7 +90,6 @@ func trapSignalsPosix() {
 				purgeEventHooks()
 
 				// Kick off the restart; our work is done
-				EmitEvent(InstanceRestartEvent, nil)
 				_, err = inst.Restart(caddyfileToUse)
 				if err != nil {
 					restoreEventHooks(oldEventHooks)

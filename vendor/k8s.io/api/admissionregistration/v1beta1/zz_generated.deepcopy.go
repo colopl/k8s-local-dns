@@ -109,11 +109,6 @@ func (in *Rule) DeepCopyInto(out *Rule) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.Scope != nil {
-		in, out := &in.Scope, &out.Scope
-		*out = new(ScopeType)
-		**out = **in
-	}
 	return
 }
 
@@ -154,8 +149,12 @@ func (in *ServiceReference) DeepCopyInto(out *ServiceReference) {
 	*out = *in
 	if in.Path != nil {
 		in, out := &in.Path, &out.Path
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	return
 }
@@ -249,28 +248,21 @@ func (in *Webhook) DeepCopyInto(out *Webhook) {
 	}
 	if in.FailurePolicy != nil {
 		in, out := &in.FailurePolicy, &out.FailurePolicy
-		*out = new(FailurePolicyType)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(FailurePolicyType)
+			**out = **in
+		}
 	}
 	if in.NamespaceSelector != nil {
 		in, out := &in.NamespaceSelector, &out.NamespaceSelector
-		*out = new(v1.LabelSelector)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.SideEffects != nil {
-		in, out := &in.SideEffects, &out.SideEffects
-		*out = new(SideEffectClass)
-		**out = **in
-	}
-	if in.TimeoutSeconds != nil {
-		in, out := &in.TimeoutSeconds, &out.TimeoutSeconds
-		*out = new(int32)
-		**out = **in
-	}
-	if in.AdmissionReviewVersions != nil {
-		in, out := &in.AdmissionReviewVersions, &out.AdmissionReviewVersions
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(v1.LabelSelector)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	return
 }
@@ -290,13 +282,21 @@ func (in *WebhookClientConfig) DeepCopyInto(out *WebhookClientConfig) {
 	*out = *in
 	if in.URL != nil {
 		in, out := &in.URL, &out.URL
-		*out = new(string)
-		**out = **in
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(string)
+			**out = **in
+		}
 	}
 	if in.Service != nil {
 		in, out := &in.Service, &out.Service
-		*out = new(ServiceReference)
-		(*in).DeepCopyInto(*out)
+		if *in == nil {
+			*out = nil
+		} else {
+			*out = new(ServiceReference)
+			(*in).DeepCopyInto(*out)
+		}
 	}
 	if in.CABundle != nil {
 		in, out := &in.CABundle, &out.CABundle

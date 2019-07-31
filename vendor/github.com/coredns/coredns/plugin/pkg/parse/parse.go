@@ -6,7 +6,7 @@ import (
 
 	"github.com/coredns/coredns/plugin/pkg/transport"
 
-	"github.com/caddyserver/caddy"
+	"github.com/mholt/caddy"
 )
 
 // Transfer parses transfer statements: 'transfer [to|from] [address...]'.

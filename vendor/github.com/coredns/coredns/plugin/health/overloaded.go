@@ -18,7 +18,6 @@ func (h *health) overloaded() {
 	}
 	url := "http://" + h.Addr
 	tick := time.NewTicker(1 * time.Second)
-	defer tick.Stop()
 
 	for {
 		select {
@@ -33,6 +32,7 @@ func (h *health) overloaded() {
 			HealthDuration.Observe(time.Since(start).Seconds())
 
 		case <-h.stop:
+			tick.Stop()
 			return
 		}
 	}

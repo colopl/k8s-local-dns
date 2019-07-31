@@ -5,6 +5,7 @@ import (
 	"context"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -15,33 +16,31 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Metrics holds the prometheus configuration. The metrics' path is fixed to be /metrics .
+// Metrics holds the prometheus configuration. The metrics' path is fixed to be /metrics
 type Metrics struct {
-	Next plugin.Handler
-	Addr string
-	Reg  *prometheus.Registry
-
+	Next    plugin.Handler
+	Addr    string
+	Reg     *prometheus.Registry
 	ln      net.Listener
 	lnSetup bool
-
-	mux *http.ServeMux
-	srv *http.Server
+	mux     *http.ServeMux
+	srv     *http.Server
 
 	zoneNames []string
-	zoneMap   map[string]struct{}
+	zoneMap   map[string]bool
 	zoneMu    sync.RWMutex
 }
 
-// New returns a new instance of Metrics with the given address.
+// New returns a new instance of Metrics with the given address
 func New(addr string) *Metrics {
 	met := &Metrics{
 		Addr:    addr,
 		Reg:     prometheus.NewRegistry(),
-		zoneMap: make(map[string]struct{}),
+		zoneMap: make(map[string]bool),
 	}
 	// Add the default collectors
 	met.MustRegister(prometheus.NewGoCollector())
-	met.MustRegister(prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}))
+	met.MustRegister(prometheus.NewProcessCollector(os.Getpid(), ""))
 
 	// Add all of our collectors
 	met.MustRegister(buildInfo)
@@ -53,7 +52,6 @@ func New(addr string) *Metrics {
 	met.MustRegister(vars.RequestType)
 	met.MustRegister(vars.ResponseSize)
 	met.MustRegister(vars.ResponseRcode)
-	met.MustRegister(vars.PluginEnabled)
 
 	return met
 }
@@ -72,7 +70,7 @@ func (m *Metrics) MustRegister(c prometheus.Collector) {
 // AddZone adds zone z to m.
 func (m *Metrics) AddZone(z string) {
 	m.zoneMu.Lock()
-	m.zoneMap[z] = struct{}{}
+	m.zoneMap[z] = true
 	m.zoneNames = keys(m.zoneMap)
 	m.zoneMu.Unlock()
 }
@@ -103,19 +101,14 @@ func (m *Metrics) OnStartup() error {
 
 	m.ln = ln
 	m.lnSetup = true
+	ListenAddr = m.ln.Addr().String() // For tests
 
 	m.mux = http.NewServeMux()
 	m.mux.Handle("/metrics", promhttp.HandlerFor(m.Reg, promhttp.HandlerOpts{}))
-
-	// creating some helper variables to avoid data races on m.srv and m.ln
-	server := &http.Server{Handler: m.mux}
-	m.srv = server
-
+	m.srv = &http.Server{Handler: m.mux}
 	go func() {
-		server.Serve(ln)
+		m.srv.Serve(m.ln)
 	}()
-
-	ListenAddr = ln.Addr().String() // For tests.
 	return nil
 }
 
@@ -124,7 +117,7 @@ func (m *Metrics) OnRestart() error {
 	if !m.lnSetup {
 		return nil
 	}
-	u.Unset(m.Addr)
+	uniqAddr.Unset(m.Addr)
 	return m.stopServer()
 }
 
@@ -144,9 +137,11 @@ func (m *Metrics) stopServer() error {
 }
 
 // OnFinalShutdown tears down the metrics listener on shutdown and restart.
-func (m *Metrics) OnFinalShutdown() error { return m.stopServer() }
+func (m *Metrics) OnFinalShutdown() error {
+	return m.stopServer()
+}
 
-func keys(m map[string]struct{}) []string {
+func keys(m map[string]bool) []string {
 	sx := []string{}
 	for k := range m {
 		sx = append(sx, k)

@@ -5,10 +5,11 @@ import (
 	"net"
 	"time"
 
+	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
 
-	"github.com/caddyserver/caddy"
+	"github.com/mholt/caddy"
 )
 
 func init() {
@@ -19,12 +20,39 @@ func init() {
 }
 
 func setup(c *caddy.Controller) error {
-	addr, lame, err := parse(c)
+	addr, lame, err := healthParse(c)
 	if err != nil {
 		return plugin.Error("health", err)
 	}
 
-	h := &health{Addr: addr, stop: make(chan bool), lameduck: lame}
+	h := newHealth(addr)
+	h.lameduck = lame
+
+	c.OnStartup(func() error {
+		plugins := dnsserver.GetConfig(c).Handlers()
+		for _, p := range plugins {
+			if x, ok := p.(Healther); ok {
+				h.h = append(h.h, x)
+			}
+		}
+		return nil
+	})
+
+	c.OnStartup(func() error {
+		// Poll all middleware every second.
+		h.poll()
+		go func() {
+			for {
+				select {
+				case <-time.After(1 * time.Second):
+					h.poll()
+				case <-h.pollstop:
+					return
+				}
+			}
+		}()
+		return nil
+	})
 
 	c.OnStartup(func() error {
 		metrics.MustRegister(c, HealthDuration)
@@ -32,15 +60,14 @@ func setup(c *caddy.Controller) error {
 	})
 
 	c.OnStartup(h.OnStartup)
-	c.OnRestart(h.OnFinalShutdown)
+	c.OnRestart(h.OnRestart)
 	c.OnFinalShutdown(h.OnFinalShutdown)
-	c.OnRestartFailed(h.OnStartup)
 
 	// Don't do AddPlugin, as health is not *really* a plugin just a separate webserver running.
 	return nil
 }
 
-func parse(c *caddy.Controller) (string, time.Duration, error) {
+func healthParse(c *caddy.Controller) (string, time.Duration, error) {
 	addr := ""
 	dur := time.Duration(0)
 	for c.Next() {

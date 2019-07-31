@@ -15,7 +15,7 @@ import (
 	"github.com/coredns/coredns/core/dnsserver"
 	clog "github.com/coredns/coredns/plugin/pkg/log"
 
-	"github.com/caddyserver/caddy"
+	"github.com/mholt/caddy"
 )
 
 func init() {
@@ -94,6 +94,9 @@ func Run() {
 	if !dnsserver.Quiet {
 		showVersion()
 	}
+
+	// Execute instantiation events
+	caddy.EmitEvent(caddy.InstanceStartupEvent, instance)
 
 	// Twiddle your thumbs
 	instance.Wait()
@@ -254,14 +257,14 @@ var (
 )
 
 // flagsBlacklist removes flags with these names from our flagset.
-var flagsBlacklist = map[string]struct{}{
-	"logtostderr":      {},
-	"alsologtostderr":  {},
-	"v":                {},
-	"stderrthreshold":  {},
-	"vmodule":          {},
-	"log_backtrace_at": {},
-	"log_dir":          {},
+var flagsBlacklist = map[string]bool{
+	"logtostderr":      true,
+	"alsologtostderr":  true,
+	"v":                true,
+	"stderrthreshold":  true,
+	"vmodule":          true,
+	"log_backtrace_at": true,
+	"log_dir":          true,
 }
 
 var flagsToKeep []*flag.Flag
