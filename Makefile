@@ -27,7 +27,7 @@ CONTAINER_BINARIES ?= local-dns
 GIT_COMMIT := $(shell git rev-parse HEAD)
 
 # Push to the staging registry.
-REGISTRY ?= asia.gcr.io/k8s-common-224708/colopl
+REGISTRY ?= colopl
 
 ARCH ?= amd64
 ALL_ARCH := amd64

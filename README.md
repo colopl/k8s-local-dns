@@ -1,3 +1,7 @@
+[![GitHub release](https://img.shields.io/github/release/colopl/k8s-local-dns.svg)](https://github.com/colopl/k8s-local-dns/releases)
+[![Go Report Card](https://goreportcard.com/badge/github.com/colopl/k8s-local-dns)](https://goreportcard.com/report/github.com/colopl/k8s-local-dns)
+[![Travis Result](https://travis-ci.com/colopl/k8s-local-dns.svg?token=VGvwH2B72tty9c4FwZGr&branch=master)](https://travis-ci.com/colopl/k8s-local-dns.svg?token=VGvwH2B72tty9c4FwZGr&branch=master)
+
 ## Overview
 This is how we build a solid dns infrastructure in kubernetes.
 This project is inspired by
@@ -13,7 +17,10 @@ So we decide to build DNS locally to solve this issue.
 
 For currently, it is not production ready but it should be soon.
 
-## Issues
+## Limitation
+For the current version `k8s-local-dns` and original [node-cache](https://github.com/kubernetes/dns/tree/master/cmd/node-cache), It not works with `dnsPolicy: ClusterFirstWithHostNet` and `hostNetwork: true`, especially, if you are using GKE, please turn on `VPC-native (alias IP)` feature or the DNS will get down.
+
+## DNS releated issues without this
 
 - [DNS lookup timeouts due to races in conntrack](https://github.com/weaveworks/weave/issues/3287)
 - [DNS latency of 5s when uses iptables forward in pods network traffic](https://github.com/kubernetes/kubernetes/issues/62628)

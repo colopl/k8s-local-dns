@@ -29,3 +29,10 @@ script:
 - make build
 - make test
 - make containers
+
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: make push
+  on:
+    tags: true

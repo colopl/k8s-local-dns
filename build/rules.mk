@@ -119,11 +119,11 @@ $(GO_BINARIES): build-dirs
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    /bin/sh -c "                                                       \
-		ARCH=$(ARCH)                                                   \
+			ARCH=$(ARCH)                                                   \
 	        VERSION=$(VERSION)                                             \
 	        PKG=$(PKG)                                                     \
-		TARGET=$@                                                      \
-		GIT_COMMIT=$(GIT_COMMIT)                                       \
+			TARGET=$@                                                      \
+			GIT_COMMIT=$(GIT_COMMIT)                                       \
 	        ./build/build.sh                                               \
 	    "
 
@@ -169,11 +169,8 @@ push: $(PUSH_BUILDSTAMPS) images-push
 
 .%-push: .%-container
 	@echo "pushing  :" $$(head -n 1 $<)
-ifeq (,$(findstring gcr.io,$(REGISTRY)))
+	@echo "$(DOCKER_PASSWORD)" | docker login -u "$(DOCKER_USERNAME)" --password-stdin
 	@docker push $$(head -n 1 $<) $(VERBOSE_OUTPUT)
-else
-	@gcloud docker -- push $$(head -n 1 $<) $(VERBOSE_OUTPUT)
-endif
 	@cat $< > $@
 
 define PUSH_RULE
