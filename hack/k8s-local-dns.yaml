@@ -127,7 +127,7 @@ spec:
         operator: Exists
       containers:
       - name: local-dns
-        image: asia.gcr.io/k8s-common-224708/colopl/k8s-dns-local-dns-amd64:v0.0.1
+        image: asia.gcr.io/k8s-common-224708/axot/k8s-dns-local-dns-amd64:v0.0.1
         imagePullPolicy: Always
         resources:
           limits:
