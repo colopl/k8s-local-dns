@@ -26,11 +26,19 @@
 
 [[constraint]]
   name = "github.com/coredns/coredns"
-  version = "=v1.2.6"
+  version = "=1.2.6"
+
+[[override]]
+  name = "github.com/coreos/etcd"
+  version = "=3.3.5"
 
 [[constraint]]
   name = "github.com/prometheus/client_golang"
   version = "~0.8.0"
+
+[[override]]
+  name = "github.com/openzipkin/zipkin-go-opentracing"
+  version = "=0.3.4"
 
 [[override]]
   name = "github.com/mholt/caddy"
@@ -41,12 +49,12 @@
   version = "~8.0.0"
 
 [[override]]
-  name = "k8s.io/api"
-  version = "kubernetes-1.11.10"
+  name = "k8s.io/apimachinery"
+  revision = "103fd098999dc9c0c88536f5c9ad2e5da39373ae"
 
 [[override]]
-  name = "k8s.io/apimachinery"
-  version = "kubernetes-1.11.10"
+  name = "k8s.io/api"
+  revision = "072894a440bdee3a891dea811fe42902311cd2a3"
 
 [[override]]
   name = "github.com/miekg/dns"

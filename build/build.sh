@@ -43,7 +43,7 @@ if [ $GOARCH == "amd64" ]; then
 fi
 
 BIN_PKG="$PKG/cmd/$(basename ${TARGET})"
-LD_FLAGS="-X ${PKG}/pkg/version.Version=${VERSION} -X ${PKG}/pkg/version.GitCommit=${GIT_COMMIT}"
+LD_FLAGS="-s -w -X ${PKG}/pkg/version.Version=${VERSION} -X ${PKG}/pkg/version.GitCommit=${GIT_COMMIT}"
 
 if echo "${TARGET}" | grep '.*-test$'; then
   go test -c -ldflags "${LD_FLAGS}" -o "${TARGET}" "${BIN_PKG}"

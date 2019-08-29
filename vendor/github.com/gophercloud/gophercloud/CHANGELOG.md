@@ -1,4 +1,55 @@
-## 0.3.0 (Unreleaesd)
+## 0.5.0 (Unreleased)
+
+## 0.4.0 (September 3, 2019)
+
+IMPROVEMENTS
+
+* Added `blockstorage/extensions/quotasets.results.QuotaSet.Groups` [GH-1668]
+* Added `blockstorage/extensions/quotasets.results.QuotaUsageSet.Groups` [GH-1668]
+* Added `containerinfra/v1/clusters.CreateOpts.FixedNetwork` [GH-1674]
+* Added `containerinfra/v1/clusters.CreateOpts.FixedSubnet` [GH-1676]
+* Added `containerinfra/v1/clusters.CreateOpts.FloatingIPEnabled` [GH-1677]
+* Added `CreatedAt` and `UpdatedAt` to `loadbalancers/v2/loadbalancers.LoadBalancer` [GH-1681]
+* Added `networking/v2/extensions/layer3/portforwarding.Create` [GH-1651]
+* Added `networking/v2/extensions/agents.ListDHCPNetworks` [GH-1686]
+* Added `networking/v2/extensions/layer3/portforwarding.Delete` [GH-1652]
+* Added `compute/v2/extensions/tags.List` [GH-1679]
+* Added `compute/v2/extensions/tags.Check` [GH-1679]
+
+BUG FIXES
+
+* Changed `identity/v3/endpoints.ListOpts.RegionID` from `int` to `string` [GH-1664](https://github.com/gophercloud/gophercloud/pull/1664)
+* Fixed issue where older time formats in some networking APIs/resources were unable to be parsed [GH-1671](https://github.com/gophercloud/gophercloud/pull/1664)
+* Changed `SATA`, `SCSI`, and `SAS` types to `InterfaceType` in `baremetal/v1/nodes` [GH-1683]
+
+## 0.3.0 (July 31, 2019)
+
+IMPROVEMENTS
+
+* Added `baremetal/apiversions.List` [GH-1577](https://github.com/gophercloud/gophercloud/pull/1577)
+* Added `baremetal/apiversions.Get` [GH-1577](https://github.com/gophercloud/gophercloud/pull/1577)
+* Added `compute/v2/extensions/servergroups.CreateOpts.Policy` [GH-1636](https://github.com/gophercloud/gophercloud/pull/1636)
+* Added `identity/v3/extensions/trusts.Create` [GH-1644](https://github.com/gophercloud/gophercloud/pull/1644)
+* Added `identity/v3/extensions/trusts.Delete` [GH-1644](https://github.com/gophercloud/gophercloud/pull/1644)
+* Added `CreatedAt` and `UpdatedAt` to `networking/v2/extensions/layer3/floatingips.FloatingIP` [GH-1647](https://github.com/gophercloud/gophercloud/issues/1646)
+* Added `CreatedAt` and `UpdatedAt` to `networking/v2/extensions/security/groups.SecGroup` [GH-1654](https://github.com/gophercloud/gophercloud/issues/1654)
+* Added `CreatedAt` and `UpdatedAt` to `networking/v2/networks.Network` [GH-1657](https://github.com/gophercloud/gophercloud/issues/1657)
+* Added `keymanager/v1/containers.CreateSecretRef` [GH-1659](https://github.com/gophercloud/gophercloud/issues/1659)
+* Added `keymanager/v1/containers.DeleteSecretRef` [GH-1659](https://github.com/gophercloud/gophercloud/issues/1659)
+* Added `sharedfilesystems/v2/shares.GetMetadata` [GH-1656](https://github.com/gophercloud/gophercloud/issues/1656)
+* Added `sharedfilesystems/v2/shares.GetMetadatum` [GH-1656](https://github.com/gophercloud/gophercloud/issues/1656)
+* Added `sharedfilesystems/v2/shares.SetMetadata` [GH-1656](https://github.com/gophercloud/gophercloud/issues/1656)
+* Added `sharedfilesystems/v2/shares.UpdateMetadata` [GH-1656](https://github.com/gophercloud/gophercloud/issues/1656)
+* Added `sharedfilesystems/v2/shares.DeleteMetadatum` [GH-1656](https://github.com/gophercloud/gophercloud/issues/1656)
+* Added `sharedfilesystems/v2/sharetypes.IDFromName` [GH-1662](https://github.com/gophercloud/gophercloud/issues/1662)
+
+
+
+BUG FIXES
+
+* Changed `baremetal/v1/nodes.CleanStep.Args` from `map[string]string` to `map[string]interface{}` [GH-1638](https://github.com/gophercloud/gophercloud/pull/1638)
+* Removed `URLPath` and `ExpectedCodes` from `loadbalancer/v2/monitors.ToMonitorCreateMap` since Octavia now provides default values when these fields are not specified [GH-1640](https://github.com/gophercloud/gophercloud/pull/1540)
+
 
 ## 0.2.0 (June 17, 2019)
 
