@@ -130,8 +130,6 @@ spec:
         image: asia.gcr.io/k8s-common-224708/axot/k8s-dns-local-dns-amd64:v0.0.1
         imagePullPolicy: Always
         resources:
-          limits:
-            memory: 170Mi
           requests:
             cpu: 10m
             memory: 30Mi
