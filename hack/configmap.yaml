@@ -14,7 +14,7 @@ data:
                 rcode NXDOMAIN
                 authority "{{ .Zone }} 3600 {{ .Class }} SOA ns.not.permit hostmaster.colopl (1 3600 3600 3600 3600)"
         }
-        template ANY ANY {
+        template ANY ANY local {
                 match "^.*googleapis\.com[.].*$"
                 rcode NXDOMAIN
                 authority "{{ .Zone }} 3600 {{ .Class }} SOA ns.{{ .Name }} hostmaster.colopl (1 3600 3600 3600 3600)"
@@ -61,6 +61,12 @@ data:
         template ANY AAAA {
                 rcode NXDOMAIN
                 authority "{{ .Zone }} 3600 {{ .Class }} SOA ns.not.permit hostmaster.colopl (1 3600 3600 3600 3600)"
+        }
+        template ANY ANY internal {
+                match "^.*googleapis\.com[.].*$"
+                rcode NXDOMAIN
+                authority "{{ .Zone }} 3600 {{ .Class }} SOA ns.{{ .Name }} hostmaster.colopl (1 3600 3600 3600 3600)"
+                fallthrough
         }
         cache 30
         reload
