@@ -64,40 +64,13 @@ subjects:
   name: local-dns
   namespace: kube-system
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: local-dns
-  namespace: kube-system
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
-data:
-  Corefile: |
-    .:53 {
-        bind __PILLAR__LOCAL__DNS__
-        errors
-        health
-        # ready
-        kubernetes cluster.local in-addr.arpa ip6.arpa {
-            pods insecure
-            upstream
-            fallthrough in-addr.arpa ip6.arpa
-        }
-        prometheus :9153
-        forward . /etc/resolv.conf
-        cache 30
-        loop
-        reload
-        loadbalance
-    }
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: local-dns
   namespace: kube-system
   labels:
-    k8s-app: local-dns
+    k8s-app: kube-dns
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
@@ -106,13 +79,13 @@ spec:
       maxUnavailable: 10%
   selector:
     matchLabels:
-      k8s-app: local-dns
+      k8s-app: kube-dns
   template:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
       labels:
-        k8s-app: local-dns
+        k8s-app: kube-dns
     spec:
       priorityClassName: system-node-critical
       serviceAccountName: local-dns

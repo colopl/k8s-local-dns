@@ -1,0 +1,74 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-dns
+  namespace: kube-system
+  labels:
+    addonmanager.kubernetes.io/mode: EnsureExists
+data:
+  Corefile: |
+    __PILLAR__DNS__DOMAIN__:53 {
+        errors
+        template ANY AAAA {
+                rcode NXDOMAIN
+                authority "{{ .Zone }} 3600 {{ .Class }} SOA ns.not.permit hostmaster.colopl (1 3600 3600 3600 3600)"
+        }
+        template ANY ANY {
+                match "^.*googleapis\.com[.].*$"
+                rcode NXDOMAIN
+                authority "{{ .Zone }} 3600 {{ .Class }} SOA ns.{{ .Name }} hostmaster.colopl (1 3600 3600 3600 3600)"
+                fallthrough
+        }
+        cache {
+                success 9984
+                denial 9984
+                prefetch 1 1h 50%
+        }
+        reload
+        loop
+        bind __PILLAR__LOCAL__DNS__
+        forward . __PILLAR__DNS__SERVER__ {
+                force_tcp
+        }
+        prometheus :9253
+        health __PILLAR__LOCAL__DNS__:8080
+        }
+    in-addr.arpa:53 {
+        errors
+        cache 30
+        reload
+        loop
+        bind __PILLAR__LOCAL__DNS__
+        forward . __PILLAR__DNS__SERVER__ {
+                force_tcp
+        }
+        prometheus :9253
+        }
+    ip6.arpa:53 {
+        errors
+        cache 30
+        reload
+        loop
+        bind __PILLAR__LOCAL__DNS__
+        forward . __PILLAR__DNS__SERVER__ {
+                force_tcp
+        }
+        prometheus :9253
+        }
+    .:53 {
+        errors
+        template ANY AAAA {
+                rcode NXDOMAIN
+                authority "{{ .Zone }} 3600 {{ .Class }} SOA ns.not.permit hostmaster.colopl (1 3600 3600 3600 3600)"
+        }
+        cache 30
+        reload
+        loop
+        bind __PILLAR__LOCAL__DNS__
+        forward . /etc/resolv.conf {
+                force_tcp
+        }
+        prometheus :9253
+        }
+---
