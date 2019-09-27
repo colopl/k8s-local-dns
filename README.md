@@ -3,29 +3,19 @@
 [![Travis Result](https://travis-ci.com/axot/k8s-local-dns.svg?token=VGvwH2B72tty9c4FwZGr&branch=master)](https://travis-ci.com/axot/k8s-local-dns.svg?token=VGvwH2B72tty9c4FwZGr&branch=master)
 
 ## Overview
-This is how we build a solid dns infrastructure in kubernetes.
-This project is inspired by
+Using Kubernetes' node cache should solve most DNS issues, there are few reasons why we built a custom version here.
 
-* https://github.com/justinsb/dns/tree/standalone_nodecache/tools/node-cache
-* https://github.com/kubernetes/dns/tree/master/cmd/node-cache
-* https://github.com/zalando-incubator/kubernetes-on-aws/blob/dev/cluster/manifests/coredns-local
+1. Got OOM killed in our stress test.
+2. Old Kubernetes couldn't use it.
+3. Hard to control its behavior specially if you are using management Kubernetes like GKE.
 
-Technically install Kubernetes' local node cache should solve most DNS issues,
-but we found it didn't work well when DNS cache pod was created at first time on a node,
-which means DNS query will go to `kube-dns` that causes kernel-related bugs.
-So we decide to build DNS locally to solve this issue.
-
-For currently, it is not production ready but it should be soon.
-
-## Limitation
-For the current version `k8s-local-dns` and original [node-cache](https://github.com/kubernetes/dns/tree/master/cmd/node-cache), It not works with `dnsPolicy: ClusterFirstWithHostNet` and `hostNetwork: true`, especially, if you are using GKE, please turn on `VPC-native (alias IP)` feature or the DNS will get down.
+We added all CoreDNS addons, default to filter AAAA records and more.
 
 ## DNS releated issues without this
 
 - [DNS lookup timeouts due to races in conntrack](https://github.com/weaveworks/weave/issues/3287)
 - [DNS latency of 5s when uses iptables forward in pods network traffic](https://github.com/kubernetes/kubernetes/issues/62628)
 - [DNS intermittent delays of 5s](https://github.com/kubernetes/kubernetes/issues/56903)
-- And many, many more...
 
 ## Warning: Network policy
 
@@ -73,3 +63,8 @@ The procedure therefore is:
 
 * Run `cd ./hack && ./uninstall.sh`
 * Upgrade cluster
+
+## References
+* https://github.com/justinsb/dns/tree/standalone_nodecache/tools/node-cache
+* https://github.com/kubernetes/dns/tree/master/cmd/node-cache
+* https://github.com/zalando-incubator/kubernetes-on-aws/blob/dev/cluster/manifests/coredns-local
