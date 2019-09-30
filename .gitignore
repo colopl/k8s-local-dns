@@ -82,3 +82,4 @@ Session.vim
 /.*-push
 /.go
 /bin
+/hack/configmap.yaml

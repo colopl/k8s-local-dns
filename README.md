@@ -47,7 +47,7 @@ things:
 
 ## Installation
 
-A script is provided, simply run `cd ./hack && ./install.sh`
+A script is provided, simply run `cd ./hack && cp configmap.yaml.sample configmap.yaml && ./install.sh`
 
 ## Removal
 
