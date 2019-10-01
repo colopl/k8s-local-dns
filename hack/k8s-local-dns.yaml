@@ -100,7 +100,7 @@ spec:
         operator: Exists
       containers:
       - name: local-dns
-        image: axot/k8s-dns-local-dns-amd64:v0.0.1-6-ga977ec7
+        image: __LOCALDNS_IMAGE__
         imagePullPolicy: Always
         resources:
           requests:
