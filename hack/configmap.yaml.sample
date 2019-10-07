@@ -31,7 +31,7 @@ data:
         forward . __PILLAR__DNS__SERVER__ {
                 force_tcp
         }
-        prometheus :9253
+        prometheus :9153
         health __PILLAR__LOCAL__DNS__:8080
         }
     in-addr.arpa:53 {
@@ -43,7 +43,7 @@ data:
         forward . __PILLAR__DNS__SERVER__ {
                 force_tcp
         }
-        prometheus :9253
+        prometheus :9153
         }
     ip6.arpa:53 {
         errors
@@ -54,7 +54,7 @@ data:
         forward . __PILLAR__DNS__SERVER__ {
                 force_tcp
         }
-        prometheus :9253
+        prometheus :9153
         }
     .:53 {
         errors
@@ -75,6 +75,6 @@ data:
         forward . /etc/resolv.conf {
                 force_tcp
         }
-        prometheus :9253
+        prometheus :9153
         }
 ---
