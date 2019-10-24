@@ -3,7 +3,7 @@
 set -ex
 set -o pipefail
 
-DEFAULT_LOCALDNS_IMAGE=axot/k8s-dns-local-dns-amd64:v0.0.1-6-ga977ec7
+DEFAULT_LOCALDNS_IMAGE=axot/k8s-dns-local-dns-amd64:0.1.0
 
 [ -z ${LOCALDNS_IMAGE} ] && LOCALDNS_IMAGE=${DEFAULT_LOCALDNS_IMAGE}
 
