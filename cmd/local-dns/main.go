@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/axot/k8s-local-dns/pkg/netif"
+	"github.com/colopl/k8s-local-dns/pkg/netif"
 	"github.com/coredns/coredns/coremain"
 
 	// Include all plugins.

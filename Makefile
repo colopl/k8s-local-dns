@@ -17,7 +17,7 @@
 #
 
 # Golang package.
-PKG := github.com/axot/k8s-local-dns
+PKG := github.com/colopl/k8s-local-dns
 
 # List of binaries to build. You must have a matching Dockerfile.BINARY
 # for each BINARY.
@@ -27,7 +27,7 @@ CONTAINER_BINARIES ?= local-dns
 GIT_COMMIT := $(shell git rev-parse HEAD)
 
 # Push to the staging registry.
-REGISTRY ?= axot
+REGISTRY ?= colopl
 
 ARCH ?= amd64
 ALL_ARCH := amd64

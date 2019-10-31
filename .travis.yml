@@ -23,8 +23,8 @@ go:
 services:
 - docker
 install:
-- mkdir -p ${GOPATH}/src/github.com/axot
-- ln -s `pwd` ${GOPATH}/src/github.com/axot/k8s-local-dns
+- mkdir -p ${GOPATH}/src/github.com/colopl
+- ln -s `pwd` ${GOPATH}/src/github.com/colopl/k8s-local-dns
 script:
 - make build
 - make test
