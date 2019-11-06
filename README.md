@@ -11,6 +11,9 @@ Using Kubernetes' node cache should solve most DNS issues, there are few reasons
 
 We added all CoreDNS addons, default to filter AAAA records and more.
 
+## Known issues
+- Daemonset rolling update will cause DNS query timeout for few seconds.
+
 ## DNS releated issues without this
 
 - [DNS lookup timeouts due to races in conntrack](https://github.com/weaveworks/weave/issues/3287)
