@@ -21,8 +21,8 @@ data:
                 fallthrough
         }
         cache {
-                success 9984
-                denial 9984
+                success 9984 30
+                denial 9984 5
                 prefetch 1 1h 50%
         }
         reload
