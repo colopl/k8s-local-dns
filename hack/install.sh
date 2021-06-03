@@ -7,14 +7,23 @@ DEFAULT_LOCALDNS_IMAGE=colopl/k8s-dns-local-dns-amd64:0.1.0
 
 [ -z ${LOCALDNS_IMAGE} ] && LOCALDNS_IMAGE=${DEFAULT_LOCALDNS_IMAGE}
 
+# check if using coredns or kube-dns
+CLUSTER_DNS_BACKEND=`kubectl get services -n kube-system | egrep  "^coredns |^kube-dns " | awk '{print $1}'`
+if [[ -z $CLUSTER_DNS_BACKEND ]]; then
+    echo "Could not find existing coredns or kube-dns service in kube-system namespace"
+    exit 1
+fi    
+
 # Create the underlying uncached service
-kubectl apply -f kube-dns-uncached.yaml
+sed -i "s/k8s-app: kube-dns/k8s-app: ${CLUSTER_DNS_BACKEND}/g" 
+sed -i "s/name: kube-dns-uncached/name: ${CLUSTER_DNS_BACKEND}-uncached/g"
+kubectl apply -f dns-service-uncached.yaml
 
 # We will intercept the kube-dns service
-LOCAL_DNS=`kubectl get services -n kube-system kube-dns -o=jsonpath={.spec.clusterIP}`
+LOCAL_DNS=`kubectl get services -n kube-system ${CLUSTER_DNS_BACKEND} -o=jsonpath={.spec.clusterIP}`
 
 # And we will forward misses to the uncached service we created above
-UPSTREAM_DNS=`kubectl get services -n kube-system kube-dns-uncached -o=jsonpath={.spec.clusterIP}`
+UPSTREAM_DNS=`kubectl get services -n kube-system ${CLUSTER_DNS_BACKEND}-uncached -o=jsonpath={.spec.clusterIP}`
 
 # Assume the cluster DNS domain was not changed
 DNS_DOMAIN=cluster.local
