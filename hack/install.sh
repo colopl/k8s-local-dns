@@ -7,16 +7,15 @@ DEFAULT_LOCALDNS_IMAGE=colopl/k8s-dns-local-dns-amd64:0.1.0
 
 [ -z ${LOCALDNS_IMAGE} ] && LOCALDNS_IMAGE=${DEFAULT_LOCALDNS_IMAGE}
 
-# check if using coredns or kube-dns
-CLUSTER_DNS_BACKEND=`kubectl get services -n kube-system | egrep  "^coredns |^kube-dns " | awk '{print $1}'`
+# check if using coredns or kube-dns, fall back to kube-dns if neither found
+CLUSTER_DNS_BACKEND=`kubectl get services -n kube-system | egrep  "^coredns |^kube-dns " | awk '{print $1}' | head -n 1`
 if [[ -z $CLUSTER_DNS_BACKEND ]]; then
-    echo "Could not find existing coredns or kube-dns service in kube-system namespace"
-    exit 1
+    CLUSTER_DNS_BACKEND=kube-dns
 fi    
 
 # Create the underlying uncached service
-sed -i "s/k8s-app: kube-dns/k8s-app: ${CLUSTER_DNS_BACKEND}/g" 
-sed -i "s/name: kube-dns-uncached/name: ${CLUSTER_DNS_BACKEND}-uncached/g"
+sed -i "s/k8s-app: kube-dns/k8s-app: ${CLUSTER_DNS_BACKEND}/g" dns-service-uncached.yaml
+sed -i "s/name: kube-dns-uncached/name: ${CLUSTER_DNS_BACKEND}-uncached/g" dns-service-uncached.yaml
 kubectl apply -f dns-service-uncached.yaml
 
 # We will intercept the kube-dns service
